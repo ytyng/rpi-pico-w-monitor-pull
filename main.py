@@ -27,14 +27,20 @@ async def main_loop():
         print(response.content)
         if response.status_code == 200:
             data = response.json()
-            if data['image']['content_type'] == 'image/png':
+            if (
+                'image' in data and
+                data['image']['content_type'] == 'image/png'
+            ):
                 try:
                     oled.show_png_image(data['image']['data'])
                     print('Image shown.')
                 except Exception as e:
                     print(f'{e.__class__.__name__}: {e}')
+            elif 'message' in data:
+                oled.show_text(data['message'])
+                print('Message: {}'.format(data['message']))
 
-        await uasyncio.sleep(5)
+        await uasyncio.sleep(15)
 
 
 async def blink_led():
