@@ -59,21 +59,22 @@ class Oled:
         self.oled.show()
 
     def show_png_image(self, png_image_base64):
+        oled_width = 128
+        oled_height = 64
         png_width, png_height, png_monochrome_bits, png_meta = \
             png_image_base64_to_monochrome_bits(png_image_base64)
         self.oled.fill(0)
         for y, png_monochrome_bits_row in enumerate(png_monochrome_bits):
+            y_offset = (oled_height - png_height) // 2
             for x, png_monochrome_bit in enumerate(png_monochrome_bits_row):
+                x_offset = (oled_width - png_width) // 2
+                fixed_x = x + x_offset
+                fixed_y = y + y_offset
+                if fixed_x < 0 or oled_width < fixed_x:
+                    continue
+                if fixed_y < 0 or oled_height < fixed_y:
+                    continue
                 if png_monochrome_bit:
-                    self.oled.pixel(x, y, 1)
+                    self.oled.pixel(fixed_x, fixed_y, 1)
 
         self.oled.show()
-
-
-png_image_base64 = b"iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAASUExURbZNTd+ysv+Kiv///5YAAP///6XEBjAAAAAGdFJOU///////ALO/pL8AAAB5SURBVHjaYmBlZWWBAyAHIIAY0AUAAggiwAwGYAGAAIIIMIEBWAAggDAEAAIIQwAggDDMAAggDAGAAMIQAAggDAGAAMIQAAggmAAjI1QAIICgAowsLIwQAYAAgggwgjzCCBYACCCY5xgYoJ4DCCCIAIhkZQALAAQYAB2YA/Vl3FceAAAAAElFTkSuQmCC"
-
-
-if __name__ == '__main__':
-    print('start oled main.')
-    oled = Oled()
-    oled.show_png_image(png_image_base64)
