@@ -8,12 +8,11 @@ import urequests
 import network_utils
 import uasyncio
 import settings
-from oled import Oled
+from display_adapter import DisplayAdapterBase, DisplayAdapterEPaper213
 
 
-async def main_loop(oled):
+async def main_loop(da: DisplayAdapterBase):
     led_pin = machine.Pin('LED', machine.Pin.OUT)
-    # oled = Oled()
     while True:
         led_pin.on()
         # print('Request start: {}'.format(settings.REQUEST_URL))
@@ -32,12 +31,12 @@ async def main_loop(oled):
                 data['image']['content_type'] == 'image/png'
             ):
                 try:
-                    oled.show_png_image(data['image']['data'])
+                    da.display_png_image(data['image']['data'])
                     print('Image shown.')
                 except Exception as e:
                     print(f'{e.__class__.__name__}: {e}')
             elif 'message' in data:
-                oled.show_text(data['message'])
+                da.display_text(data['message'])
                 print('Message: {}'.format(data['message']))
 
         await uasyncio.sleep(15)
@@ -57,12 +56,12 @@ async def blink_led(count=3):
 
 
 async def main():
-    oled = Oled()
-    oled.show_text('Booting...')
-    wlan = await network_utils.prepare_wifi(log=oled.show_text)
-    oled.show_text('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
+    da = DisplayAdapterEPaper213()
+    print('Booting...')
+    wlan = await network_utils.prepare_wifi()
+    print('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
     await blink_led()
-    await main_loop(oled)
+    await main_loop(da)
 
 
 if __name__ == '__main__':
