@@ -5,12 +5,14 @@ import settings
 
 
 
-async def prepare_wifi():
+async def prepare_wifi(log=None):
     """
     Prepare Wi-Fi connection.
 
     https://datasheets.raspberrypi.com/picow/connecting-to-the-internet-with-pico-w.pdf  # noqa
     """
+    if not log:
+        log = print
     # Set country code
     rp2.country(settings.COUNTRY)
 
@@ -23,9 +25,10 @@ async def prepare_wifi():
         status = wlan.status()
         if wlan.status() < 0 or wlan.status() >= network.STAT_GOT_IP:
             break
-        print(f'Waiting for connection... status={status}')
-        uasyncio.sleep(1)
+        log(f'Waiting ({i})... status={status}')
+        await uasyncio.sleep(1)
     else:
+        log('Wifi connection timed out.')
         raise RuntimeError('Wifi connection timed out.')
 
     # CYW43_LINK_DOWN (0)
@@ -39,8 +42,9 @@ async def prepare_wifi():
     wlan_status = wlan.status()
 
     if wlan_status != network.STAT_GOT_IP:
+        log('Wi-Fi connection failed. status={}'.format(wlan_status))
         raise RuntimeError(
             'Wi-Fi connection failed. status={}'.format(wlan_status))
 
-    print('Wi-fi ready. ifconfig:', wlan.ifconfig())
+    log('Wi-fi ready. ifconfig: {}'.format(wlan.ifconfig()))
     return wlan

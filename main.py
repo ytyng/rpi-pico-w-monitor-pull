@@ -11,12 +11,12 @@ import settings
 from oled import Oled
 
 
-async def main_loop():
+async def main_loop(oled):
     led_pin = machine.Pin('LED', machine.Pin.OUT)
-    oled = Oled()
+    # oled = Oled()
     while True:
         led_pin.on()
-        print('Request start: {}'.format(settings.REQUEST_URL))
+        # print('Request start: {}'.format(settings.REQUEST_URL))
         response = urequests.get(
             settings.REQUEST_URL,
             headers={
@@ -24,7 +24,7 @@ async def main_loop():
                 'Authorization': settings.REQUEST_HEADER_AUTHORIZATION,
             })
         led_pin.off()
-        print(response.content)
+        # print(response.content)
         if response.status_code == 200:
             data = response.json()
             if (
@@ -43,13 +43,13 @@ async def main_loop():
         await uasyncio.sleep(15)
 
 
-async def blink_led():
+async def blink_led(count=3):
     """
     LED を3回点灯させる。
     起動サインに使う
     """
     led_pin = machine.Pin('LED', machine.Pin.OUT)
-    for i in range(3):
+    for i in range(count):
         led_pin.on()
         await uasyncio.sleep(0.2)
         led_pin.off()
@@ -57,10 +57,12 @@ async def blink_led():
 
 
 async def main():
-    wlan = await network_utils.prepare_wifi()
-    print('Wifi ready. {}'.format(wlan.ifconfig()[0]))
+    oled = Oled()
+    oled.show_text('Booting...')
+    wlan = await network_utils.prepare_wifi(log=oled.show_text)
+    oled.show_text('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
     await blink_led()
-    await main_loop()
+    await main_loop(oled)
 
 
 if __name__ == '__main__':

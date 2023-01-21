@@ -56,7 +56,7 @@ class Oled:
         i2c = I2C(0, sda=Pin(sda_pin), scl=Pin(scl_pin), freq=i2c_freq)
         self.oled = ssd1306.SSD1306_I2C(display_width, display_height, i2c)
 
-    def show_text(self, text, *, line_margin=4, auto_return=False):
+    def show_text(self, text, *, line_margin=4, auto_return=True):
         self.oled.fill(0)
         if isinstance(text, str):
             text = text.splitlines()
