@@ -4,8 +4,30 @@ import uasyncio
 import settings
 
 
+class WifiConnectionFailed(Exception):
+    pass
+
+
+class WifiConnectionAbort(Exception):
+    pass
+
 
 async def prepare_wifi(log=None):
+    for i in range(5):
+        try:
+            return await _prepare_wifi(log=log)
+        except WifiConnectionFailed as e:
+            log('{}: {}', e.__class__.__name__, e)
+            await uasyncio.sleep(2)
+            continue
+        except Exception as e:
+            log('{}: {}', e.__class__.__name__, e)
+            raise
+    else:
+        raise WifiConnectionAbort('Retry expired.')
+
+
+async def _prepare_wifi(log=None):
     """
     Prepare Wi-Fi connection.
 
@@ -23,13 +45,13 @@ async def prepare_wifi(log=None):
 
     for i in range(10):
         status = wlan.status()
-        if wlan.status() < 0 or wlan.status() >= network.STAT_GOT_IP:
+        if status < 0 or network.STAT_GOT_IP <= status:
             break
         log(f'Waiting ({i})... status={status}')
         await uasyncio.sleep(1)
     else:
         log('Wifi connection timed out.')
-        raise RuntimeError('Wifi connection timed out.')
+        raise WifiConnectionAbort('Wifi connection timed out.')
 
     # CYW43_LINK_DOWN (0)
     # CYW43_LINK_JOIN (1)
@@ -42,8 +64,7 @@ async def prepare_wifi(log=None):
     wlan_status = wlan.status()
 
     if wlan_status != network.STAT_GOT_IP:
-        log('Wi-Fi connection failed. status={}'.format(wlan_status))
-        raise RuntimeError(
+        raise WifiConnectionFailed(
             'Wi-Fi connection failed. status={}'.format(wlan_status))
 
     log('Wi-fi ready. ifconfig: {}'.format(wlan.ifconfig()))

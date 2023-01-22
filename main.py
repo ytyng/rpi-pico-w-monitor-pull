@@ -8,7 +8,7 @@ import urequests
 import network_utils
 import uasyncio
 import settings
-from display_adapter import DisplayAdapterBase, DisplayAdapterEPaper213
+from display_adapter import DisplayAdapterBase, get_adapter_by_name
 
 
 async def main_loop(da: DisplayAdapterBase):
@@ -39,7 +39,7 @@ async def main_loop(da: DisplayAdapterBase):
                 da.display_text(data['message'])
                 print('Message: {}'.format(data['message']))
 
-        await uasyncio.sleep(15)
+        await uasyncio.sleep(settings.POLLING_TIME_SECONDS)
 
 
 async def blink_led(count=3):
@@ -56,10 +56,12 @@ async def blink_led(count=3):
 
 
 async def main():
-    da = DisplayAdapterEPaper213()
+    await blink_led(1)
     print('Booting...')
-    wlan = await network_utils.prepare_wifi()
-    print('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
+    da = get_adapter_by_name(settings.DISPLAY_DEVICE)
+    da.display_text('Booting...')
+    wlan = await network_utils.prepare_wifi(log=da.display_text)
+    da.display_text('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
     await blink_led()
     await main_loop(da)
 

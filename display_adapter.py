@@ -177,6 +177,27 @@ class DisplayAdapterEPaper213(DisplayAdapterBase):
         return self._framebuf.width
 
 
+def get_adapter_class_by_name(name: str):
+    """
+    :param name: Display adapter name.
+    :return: Display adapter class.
+    """
+    upper_name = name.upper()
+    if upper_name == 'SSD1306':
+        return DisplayAdapterSSD1306
+    elif upper_name == 'EPAPER213':
+        return DisplayAdapterEPaper213
+    raise ValueError('Unknown display adapter: {}'.format(name))
+
+
+def get_adapter_by_name(name: str) -> DisplayAdapterBase:
+    """
+    :param name: Display adapter name. SSD1306 | EPAPER213
+    :return: Display adapter instance.
+    """
+    return get_adapter_class_by_name(name)()
+
+
 png_image_base64 = b'iVBORw0KGgoAAAANSUhEUgAAAIAAAABAAQAAAAD6rULSAAABe0lEQVR4nM2TvUtCYRTGj1+UOlgY1dYHFwwXGxsCJYIKSWxqif6Ippao1SmiwYiiSWoIbHSroaWCCKOhgjAXKUpu5kem930arr73vI619C738uM8z3Pec+61gdRjp9+DpRPzaWuZNp2GQ6lwUmXYfEP7nKcBAE7p9uTikipR6ZiDLNH7HQc3RLfLEQYyRNdXEZYSAhKeMAC0wCmgxTcZAMScK6T2cR8NK502tzyLTLKOurbgs4AA9IR2qJi+jk4NAIAcUC2QXbU6FUTux3LGHEwL14q7H1ZsA7ic7YsCQHumlCr6Vt54Re+aZ4bHigSeR3isuDjzB/ldDHd+3m9JPqGnmsmCBRp48Bs+WB5VSk5imm2uLMoheFmFCFfGscP2ImL1nO2ISb4DL8A2k9TG+okmmMShE9Egk5QO5GdiVthzcj3mxGKGBHYiIlGISEAAoG8MSQ8CgEowrYJ8T5eaUtyPqx4wvJ197KmxRJoErUV9dXcA6/zlF/tv4AfY1mEuwRaXpQAAAABJRU5ErkJggg=='  # NOQA
 
 
