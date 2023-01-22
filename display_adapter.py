@@ -1,6 +1,6 @@
 import framebuf
-from machine import Pin, I2C
 import utime
+from machine import Pin, I2C
 import ubinascii
 
 try:
@@ -10,36 +10,6 @@ except ImportError:
           'Download: https://github.com/Ratfink/micropython-png png.py '
           'to project root directory.')
     raise
-
-
-def png_image_base64_to_monochrome_bits(png_image_base64):
-    return png_image_to_monochrome_bits(ubinascii.a2b_base64(png_image_base64))
-
-
-def is_light(r, g, b):
-    """
-    :return: RGB Color is dark or not.
-    https://stackoverflow.com/a/14331/4617297
-    """
-    mono = (0.2125 * r) + (0.7154 * g) + (0.0721 * b)
-    return 127 < mono
-
-
-def png_image_to_monochrome_bits(png_image_binary):
-    """
-    Convert PNG image to monochrome bit list.
-    """
-    png_reader = Reader(bytes=png_image_binary)
-    png_width, png_height, png_rgb_pixels, png_meta = png_reader.asRGB()
-
-    def monochrome_list(rgb_pixels):
-        for pixels in rgb_pixels:
-            yield [
-                is_light(pixels[i], pixels[i + 1], pixels[i + 2])
-                for i in range(0, len(pixels), 3)
-            ]
-
-    return png_width, png_height, monochrome_list(png_rgb_pixels), png_meta
 
 
 class DisplayAdapterBase:
@@ -106,15 +76,39 @@ class DisplayAdapterBase:
                 line[i:i + x_width] for i in range(0, len(line), x_width)]
         return new_text
 
-    def display_png_image(self, png_image_base64):
+    def error(self, message):
+        self.display_text(f'[ERROR] {message}')
+
+    def display_png_image(self, png_image_base64: bytes):
         """
         Show PNG image on center of display.
+
+        Support only 1-bit monochrome PNG image.
         """
-        png_width, png_height, png_monochrome_bits, png_meta = \
-            png_image_base64_to_monochrome_bits(png_image_base64)
+        try:
+            reader = Reader(bytes=ubinascii.a2b_base64(png_image_base64))
+        except Exception as e:
+            self.error('Invalid png data: {} {}'.format(
+                e.__class__.__name__, e))
+            return
+
+        png_width, png_height, pixels, png_meta = reader.asDirect()
+
+        if not png_meta['greyscale']:
+            self.error('PNG is not greyscale image.')
+            return
+
+        if png_meta['alpha']:
+            self.error('PNG with alpha is not supported.')
+            return
+
+        if png_meta['bitdepth'] != 1:
+            self.error('PNG bitdepth is not 1.')
+            return
+
         self._framebuf.fill(self.bg_color)
         _bg_is_dark = not self.bg_color
-        for y, png_monochrome_bits_row in enumerate(png_monochrome_bits):
+        for y, png_monochrome_bits_row in enumerate(pixels):
             y_offset = (self.height - png_height) // 2
             for x, png_monochrome_bit in enumerate(png_monochrome_bits_row):
                 x_offset = (self.width - png_width) // 2
@@ -183,7 +177,7 @@ class DisplayAdapterEPaper213(DisplayAdapterBase):
         return self._framebuf.width
 
 
-png_image_base64 = b'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'
+png_image_base64 = b'iVBORw0KGgoAAAANSUhEUgAAAIAAAABAAQAAAAD6rULSAAABe0lEQVR4nM2TvUtCYRTGj1+UOlgY1dYHFwwXGxsCJYIKSWxqif6Ippao1SmiwYiiSWoIbHSroaWCCKOhgjAXKUpu5kem930arr73vI619C738uM8z3Pec+61gdRjp9+DpRPzaWuZNp2GQ6lwUmXYfEP7nKcBAE7p9uTikipR6ZiDLNH7HQc3RLfLEQYyRNdXEZYSAhKeMAC0wCmgxTcZAMScK6T2cR8NK502tzyLTLKOurbgs4AA9IR2qJi+jk4NAIAcUC2QXbU6FUTux3LGHEwL14q7H1ZsA7ic7YsCQHumlCr6Vt54Re+aZ4bHigSeR3isuDjzB/ldDHd+3m9JPqGnmsmCBRp48Bs+WB5VSk5imm2uLMoheFmFCFfGscP2ImL1nO2ISb4DL8A2k9TG+okmmMShE9Egk5QO5GdiVthzcj3mxGKGBHYiIlGISEAAoG8MSQ8CgEowrYJ8T5eaUtyPqx4wvJ197KmxRJoErUV9dXcA6/zlF/tv4AfY1mEuwRaXpQAAAABJRU5ErkJggg=='  # NOQA
 
 
 def _demo():
