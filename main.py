@@ -1,7 +1,8 @@
 """
-Raspberry Pi Pico Web Server with Microdot and Switch Sample Code.
+Raspberry Pi Pico W E-Paper web client
 
-Pin 14 is used for switch input.
+Polling request to web server that response PNG image.
+Display the image on e-paper display.
 """
 import machine
 import urequests
@@ -44,8 +45,7 @@ async def main_loop(da: DisplayAdapterBase):
 
 async def blink_led(count=3):
     """
-    LED を3回点灯させる。
-    起動サインに使う
+    Brink LED 3 times for debugging.
     """
     led_pin = machine.Pin('LED', machine.Pin.OUT)
     for i in range(count):
