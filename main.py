@@ -11,6 +11,7 @@ import settings
 from display_adapter import DisplayAdapterBase, get_adapter_by_name
 import utime
 
+
 def main_loop(da: DisplayAdapterBase):
     led_pin = machine.Pin('LED', machine.Pin.OUT)
     while True:
@@ -34,19 +35,25 @@ def _one_request(da: DisplayAdapterBase):
             'Authorization': settings.REQUEST_HEADER_AUTHORIZATION,
         })
     if response.status_code == 200:
-        data = response.json()
-        if (
-            'image' in data and
-            data['image']['content_type'] == 'image/png'
-        ):
-            try:
-                da.display_png_image(data['image']['data'])
-                print('Image shown.')
-            except Exception as e:
-                print(f'{e.__class__.__name__}: {e}')
-        elif 'message' in data:
-            da.display_text(data['message'])
-            print('Message: {}'.format(data['message']))
+        if response.headers.get('Content-Type') == 'image/png':
+            # PNG response
+            da.display_png_image(response.content)
+            print('Image by binary shown.')
+        else:
+            # JSON response
+            data = response.json()
+            if (
+                'image' in data and
+                data['image']['content_type'] == 'image/png'
+            ):
+                try:
+                    da.display_base64_png_image(data['image']['data'])
+                    print('Image by test shown.')
+                except Exception as e:
+                    print(f'{e.__class__.__name__}: {e}')
+            elif 'message' in data:
+                da.display_text(data['message'])
+                print('Message: {}'.format(data['message']))
     else:
         da.error('{}'.format(response.status_code))
         print('Request failed: {}'.format(response.status_code))

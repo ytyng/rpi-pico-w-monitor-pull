@@ -79,14 +79,17 @@ class DisplayAdapterBase:
     def error(self, message):
         self.display_text(f'[ERROR] {message}')
 
-    def display_png_image(self, png_image_base64: bytes):
+    def display_base64_png_image(self, png_image_base64: bytes):
+        self.display_png_image(ubinascii.a2b_base64(png_image_base64))
+
+    def display_png_image(self, png_image: bytes):
         """
         Show PNG image on center of display.
 
         Support only 1-bit monochrome PNG image.
         """
         try:
-            reader = Reader(bytes=ubinascii.a2b_base64(png_image_base64))
+            reader = Reader(bytes=png_image)
         except Exception as e:
             self.error('Invalid png data: {} {}'.format(
                 e.__class__.__name__, e))
@@ -130,8 +133,10 @@ class DisplayAdapterSSD1306(DisplayAdapterBase):
     """
     SSD1306_I2C OLED Controller Class
     """
-    SDA_PIN = 16
-    SCL_PIN = 17
+    # SDA_PIN = 16
+    # SCL_PIN = 17
+    SDA_PIN = 20
+    SCL_PIN = 21
     I2C_FREQ = 400000
     DISPLAY_WIDTH = 128
     DISPLAY_HEIGHT = 64
@@ -202,15 +207,16 @@ png_image_base64 = b'iVBORw0KGgoAAAANSUhEUgAAAIAAAABAAQAAAAD6rULSAAABe0lEQVR4nM2
 
 
 def _demo():
-    adapter = DisplayAdapterEPaper213()
+    # adapter = DisplayAdapterEPaper213()
+    adapter = DisplayAdapterSSD1306()
     print('step1')
     adapter.display_text([
         'hello, world.',
-        'I am a e-paper display.',
+        # 'I am a e-paper display.',
         'Width: {}, Height: {}'.format(
             adapter.width, adapter.height)])
     utime.sleep(5)
-    adapter.display_png_image(png_image_base64)
+    adapter.display_base64_png_image(png_image_base64)
     print('end.')
 
 

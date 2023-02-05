@@ -2,6 +2,18 @@
 
 ![画像](https://media.ytyng.com/20230121/0a9b08a399784778a8ecc7658325dd25.jpg)
 
+# requirements
+
+qrequests
+
+micropython_itertools
+
+micropython_ssd1306
+If you use OLED
+
+pico_e_paper
+If you use e-paper
+
 ## get png.py
 
 Get https://github.com/Ratfink/micropython-png
