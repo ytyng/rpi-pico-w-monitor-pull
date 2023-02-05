@@ -1,7 +1,7 @@
 import rp2
 import network
-import uasyncio
 import settings
+import utime
 
 
 class WifiConnectionFailed(Exception):
@@ -12,13 +12,13 @@ class WifiConnectionAbort(Exception):
     pass
 
 
-async def prepare_wifi(log=None):
+def prepare_wifi(log=None):
     for i in range(5):
         try:
-            return await _prepare_wifi(log=log)
+            return _prepare_wifi(log=log)
         except WifiConnectionFailed as e:
             log('{}: {}', e.__class__.__name__, e)
-            await uasyncio.sleep(2)
+            utime.sleep(2)
             continue
         except Exception as e:
             log('{}: {}', e.__class__.__name__, e)
@@ -27,7 +27,7 @@ async def prepare_wifi(log=None):
         raise WifiConnectionAbort('Retry expired.')
 
 
-async def _prepare_wifi(log=None):
+def _prepare_wifi(log=None):
     """
     Prepare Wi-Fi connection.
 
@@ -48,7 +48,7 @@ async def _prepare_wifi(log=None):
         if status < 0 or network.STAT_GOT_IP <= status:
             break
         log(f'Waiting ({i})... status={status}')
-        await uasyncio.sleep(1)
+        utime.sleep(1)
     else:
         log('Wifi connection timed out.')
         raise WifiConnectionAbort('Wifi connection timed out.')

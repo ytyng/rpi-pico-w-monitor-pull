@@ -7,12 +7,11 @@ Display the image on e-paper display.
 import machine
 import urequests
 import network_utils
-import uasyncio
 import settings
 from display_adapter import DisplayAdapterBase, get_adapter_by_name
+import utime
 
-
-async def main_loop(da: DisplayAdapterBase):
+def main_loop(da: DisplayAdapterBase):
     led_pin = machine.Pin('LED', machine.Pin.OUT)
     while True:
         led_pin.on()
@@ -24,7 +23,7 @@ async def main_loop(da: DisplayAdapterBase):
             da.error('{}'.format(e))
         led_pin.off()
 
-        await uasyncio.sleep(settings.POLLING_TIME_SECONDS)
+        utime.sleep(settings.POLLING_TIME_SECONDS)
 
 
 def _one_request(da: DisplayAdapterBase):
@@ -53,28 +52,28 @@ def _one_request(da: DisplayAdapterBase):
         print('Request failed: {}'.format(response.status_code))
 
 
-async def blink_led(count=3):
+def blink_led(count=3):
     """
     Brink LED 3 times for debugging.
     """
     led_pin = machine.Pin('LED', machine.Pin.OUT)
     for i in range(count):
         led_pin.on()
-        await uasyncio.sleep(0.2)
+        utime.sleep(0.2)
         led_pin.off()
-        await uasyncio.sleep(0.2)
+        utime.sleep(0.2)
 
 
-async def main():
-    await blink_led(1)
+def main():
+    blink_led(1)
     print('Booting...')
     da = get_adapter_by_name(settings.DISPLAY_DEVICE)
     da.display_text('Booting...')
-    wlan = await network_utils.prepare_wifi(log=da.display_text)
+    wlan = network_utils.prepare_wifi(log=da.display_text)
     da.display_text('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
-    await blink_led()
-    await main_loop(da)
+    blink_led()
+    main_loop(da)
 
 
 if __name__ == '__main__':
-    uasyncio.run(main())
+    main()
