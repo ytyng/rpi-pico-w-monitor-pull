@@ -16,31 +16,41 @@ async def main_loop(da: DisplayAdapterBase):
     led_pin = machine.Pin('LED', machine.Pin.OUT)
     while True:
         led_pin.on()
-        # print('Request start: {}'.format(settings.REQUEST_URL))
-        response = urequests.get(
-            settings.REQUEST_URL,
-            headers={
-                'User-Agent': settings.REQUEST_HEADER_USER_AGENT,
-                'Authorization': settings.REQUEST_HEADER_AUTHORIZATION,
-            })
+        try:
+            _one_request(da)
+        except Exception as e:
+            error_message = f'{e.__class__.__name__}: {e}'
+            print(error_message)
+            da.error('{}'.format(e))
         led_pin.off()
-        # print(response.content)
-        if response.status_code == 200:
-            data = response.json()
-            if (
-                'image' in data and
-                data['image']['content_type'] == 'image/png'
-            ):
-                try:
-                    da.display_png_image(data['image']['data'])
-                    print('Image shown.')
-                except Exception as e:
-                    print(f'{e.__class__.__name__}: {e}')
-            elif 'message' in data:
-                da.display_text(data['message'])
-                print('Message: {}'.format(data['message']))
 
         await uasyncio.sleep(settings.POLLING_TIME_SECONDS)
+
+
+def _one_request(da: DisplayAdapterBase):
+    response = urequests.get(
+        settings.REQUEST_URL,
+        headers={
+            'User-Agent': settings.REQUEST_HEADER_USER_AGENT,
+            'Authorization': settings.REQUEST_HEADER_AUTHORIZATION,
+        })
+    if response.status_code == 200:
+        data = response.json()
+        if (
+            'image' in data and
+            data['image']['content_type'] == 'image/png'
+        ):
+            try:
+                da.display_png_image(data['image']['data'])
+                print('Image shown.')
+            except Exception as e:
+                print(f'{e.__class__.__name__}: {e}')
+        elif 'message' in data:
+            da.display_text(data['message'])
+            print('Message: {}'.format(data['message']))
+    else:
+        da.error('{}'.format(response.status_code))
+        print('Request failed: {}'.format(response.status_code))
 
 
 async def blink_led(count=3):
