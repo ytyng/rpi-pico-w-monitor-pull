@@ -12,7 +12,9 @@ class WifiConnectionAbort(Exception):
     pass
 
 
-def prepare_wifi(log=None):
+def prepare_wifi(log=None) -> network.WLAN:
+    if not log:
+        log = print
     for i in range(5):
         try:
             return _prepare_wifi(log=log)
@@ -27,7 +29,7 @@ def prepare_wifi(log=None):
         raise WifiConnectionAbort('Retry expired.')
 
 
-def _prepare_wifi(log=None):
+def _prepare_wifi(log=None) -> network.WLAN:
     """
     Prepare Wi-Fi connection.
 
