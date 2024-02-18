@@ -89,7 +89,8 @@ def main():
     blink_led(1)
     print('Booting...')
     da = get_adapter_by_name(settings.DISPLAY_DEVICE)
-    da.display_text('Booting...')
+    if settings.BOOT_DISPLAY:
+        da.display_text('Booting...')
     try:
         # wlan = network_utils.prepare_wifi(log=da.display_text)
         wlan = network_utils.prepare_wifi()
@@ -101,7 +102,8 @@ def main():
         machine.reset()
         return
 
-    da.display_text('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
+    if settings.BOOT_DISPLAY:
+        da.display_text('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
     blink_led()
     main_loop(da, wlan)
 
