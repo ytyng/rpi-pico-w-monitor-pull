@@ -8,9 +8,12 @@ import machine
 import urequests
 import network_utils
 import network
+import power
 import settings
 from display_adapter import DisplayAdapterBase, get_adapter_by_name
 import utime
+
+STARTUP_GRACE_SECONDS = 3
 
 
 def main_loop(da: DisplayAdapterBase, wlan: network.WLAN):
@@ -24,20 +27,7 @@ def main_loop(da: DisplayAdapterBase, wlan: network.WLAN):
             print(error_message)
             da.error('{}'.format(e))
         led_pin.off()
-
-        if getattr(settings, 'DEEP_SLEEP_SECONDS', None):
-            print('Deep sleep for {} seconds.'.format(
-                settings.DEEP_SLEEP_SECONDS))
-            utime.sleep(1)
-            # Disconnect Wi-fi
-            wlan.disconnect()
-            wlan.active(False)
-            # Deactivate Wi-fi
-            machine.Pin(23, machine.Pin.OUT).low()
-            machine.deepsleep(settings.DEEP_SLEEP_SECONDS * 1000)
-            return
-
-        utime.sleep(settings.POLLING_TIME_SECONDS)
+        power.after_request(wlan)
 
 
 def _one_request(da: DisplayAdapterBase):
@@ -85,9 +75,24 @@ def blink_led(count=3):
 
 
 def main():
+    try:
+        _boot()
+    except Exception as e:
+        print(f'{e.__class__.__name__}: {e}')
+        # Anything escaping _boot (display init, Wi-Fi, main_loop) would
+        # otherwise leave the board idle at the REPL, with a wired TPL5110
+        # still supplying power.
+        power.on_failure()
+
+
+def _boot():
     machine.Pin(23, machine.Pin.OUT).high()  # Wake up Wi-fy
     blink_led(1)
-    print('Booting...')
+    print('Booting... (Ctrl-C within {} s to stop)'.format(
+        STARTUP_GRACE_SECONDS))
+    # Window for deploy.py to interrupt before deepsleep / TPL5110 kill the REPL.
+    utime.sleep(STARTUP_GRACE_SECONDS)
+    print('POWER_MODE:', power.get_mode())  # fail here, before Wi-Fi, on a typo
     da = get_adapter_by_name(settings.DISPLAY_DEVICE)
     if settings.BOOT_DISPLAY:
         da.display_text('Booting...')
@@ -95,12 +100,10 @@ def main():
         # wlan = network_utils.prepare_wifi(log=da.display_text)
         wlan = network_utils.prepare_wifi()
     except Exception as e:
-        print(f'{e.__class__.__name__}: {e}')
         da.display_text(f'{e.__class__.__name__}: {e}')
         # 10秒がタイムアウトになる場合がある。
         # リセットしたほうが確実
-        machine.reset()
-        return
+        raise
 
     if settings.BOOT_DISPLAY:
         da.display_text('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
