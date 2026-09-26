@@ -36,7 +36,9 @@ Installed on the board with `upip` (the board runs MicroPython v1.19.1, which ha
 | `deepsleep` | `machine.deepsleep(DEEP_SLEEP_SECONDS * 1000)` | REPL is dead while asleep; deploy needs a USB replug. Board resets on wake |
 | `tpl5110` | pulse DONE on `TPL5110_DONE_PIN` (GP16) | TPL5110 cuts power; its resistor sets the interval. If power is not cut (USB attached) it falls back to `polling` |
 
-An unknown `POWER_MODE` stops `main.py` at boot with a `ValueError`.
+An unknown `POWER_MODE` stops `main.py` at boot with a `ValueError`. If Wi-Fi setup
+fails, `tpl5110` mode pulses DONE before resetting, so the TPL5110 retries next period
+instead of the board reboot-looping with Wi-Fi on.
 
 TPL5110 wiring: TPL5110 `DRV` → Pico `VSYS`, `GND` → `GND`, `DONE` ← Pico `GP16`.
 `POLLING_TIME_SECONDS` in this mode is only the USB fallback interval.
@@ -46,7 +48,7 @@ TPL5110 wiring: TPL5110 `DRV` → Pico `VSYS`, `GND` → `GND`, `DONE` ← Pico 
 ```
 uv sync
 uv run tools/deploy.py          # main.py settings.py network_utils.py display_adapter.py power.py
-uv run tools/deploy.py --libs   # + png.py pico_e_paper.py
+uv run tools/deploy.py --libs   # + png.py, pico_e_paper.py (those present)
 ```
 
 `main.py` waits `STARTUP_GRACE_SECONDS` (3 s) after boot. `deploy.py` sends

@@ -32,7 +32,7 @@ committed reference; keep both in sync when adding a setting.
 
 ```
 uv run tools/deploy.py          # core files, then reset
-uv run tools/deploy.py --libs   # also png.py / pico_e_paper.py
+uv run tools/deploy.py --libs   # also png.py / pico_e_paper.py (those present)
 ```
 
 Gotchas:

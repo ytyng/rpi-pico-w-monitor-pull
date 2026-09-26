@@ -93,7 +93,7 @@ def main():
         da.display_text(f'{e.__class__.__name__}: {e}')
         # 10秒がタイムアウトになる場合がある。
         # リセットしたほうが確実
-        machine.reset()
+        power.on_startup_failure()
         return
 
     if settings.BOOT_DISPLAY:

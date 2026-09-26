@@ -35,6 +35,16 @@ def after_request(wlan):
     _polling_sleep()
 
 
+def on_startup_failure():
+    """
+    Give up this cycle. In tpl5110 mode cut our power so the TPL5110 retries
+    on its next period; a plain reset would loop forever with Wi-Fi on.
+    """
+    if get_mode() == 'tpl5110':
+        _tpl5110_done()
+    machine.reset()
+
+
 def _polling_sleep():
     utime.sleep(settings.POLLING_TIME_SECONDS)
 

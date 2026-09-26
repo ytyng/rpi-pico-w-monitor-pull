@@ -2,7 +2,7 @@
 Copy firmware/ to the Pico W over USB.
 
     uv run tools/deploy.py            # core files
-    uv run tools/deploy.py --libs     # also png.py / pico_e_paper.py
+    uv run tools/deploy.py --libs     # also png.py / pico_e_paper.py (those present)
     uv run tools/deploy.py --no-reset # leave the board at the REPL
 
 The board ignores the REPL while in machine.deepsleep, and a TPL5110 may cut
@@ -76,16 +76,23 @@ def mpremote(port: str, *args: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split('\n')[1])
     parser.add_argument('--libs', action='store_true',
-                        help='also copy png.py and pico_e_paper.py')
+                        help='also copy png.py / pico_e_paper.py if present')
     parser.add_argument('--no-reset', action='store_true',
                         help='do not reset the board after copying')
     args = parser.parse_args()
 
-    files = CORE_FILES + (LIB_FILES if args.libs else [])
-    missing = [f for f in files if not (FIRMWARE_DIR / f).exists()]
+    missing = [f for f in CORE_FILES if not (FIRMWARE_DIR / f).exists()]
     if missing:
         print(f'Missing in {FIRMWARE_DIR}: {", ".join(missing)}')
         return 1
+    files = list(CORE_FILES)
+    if args.libs:
+        # An OLED unit has no pico_e_paper.py; copy whichever libs exist.
+        for f in LIB_FILES:
+            if (FIRMWARE_DIR / f).exists():
+                files.append(f)
+            else:
+                print(f'Skipping {f} (not in {FIRMWARE_DIR})')
 
     port = find_port()
     if port is None:
