@@ -8,9 +8,12 @@ import machine
 import urequests
 import network_utils
 import network
+import power
 import settings
 from display_adapter import DisplayAdapterBase, get_adapter_by_name
 import utime
+
+STARTUP_GRACE_SECONDS = 3
 
 
 def main_loop(da: DisplayAdapterBase, wlan: network.WLAN):
@@ -24,20 +27,7 @@ def main_loop(da: DisplayAdapterBase, wlan: network.WLAN):
             print(error_message)
             da.error('{}'.format(e))
         led_pin.off()
-
-        if getattr(settings, 'DEEP_SLEEP_SECONDS', None):
-            print('Deep sleep for {} seconds.'.format(
-                settings.DEEP_SLEEP_SECONDS))
-            utime.sleep(1)
-            # Disconnect Wi-fi
-            wlan.disconnect()
-            wlan.active(False)
-            # Deactivate Wi-fi
-            machine.Pin(23, machine.Pin.OUT).low()
-            machine.deepsleep(settings.DEEP_SLEEP_SECONDS * 1000)
-            return
-
-        utime.sleep(settings.POLLING_TIME_SECONDS)
+        power.after_request(wlan)
 
 
 def _one_request(da: DisplayAdapterBase):
@@ -87,7 +77,11 @@ def blink_led(count=3):
 def main():
     machine.Pin(23, machine.Pin.OUT).high()  # Wake up Wi-fy
     blink_led(1)
-    print('Booting...')
+    print('Booting... (Ctrl-C within {} s to stop)'.format(
+        STARTUP_GRACE_SECONDS))
+    # Window for deploy.py to interrupt before deepsleep / TPL5110 kill the REPL.
+    utime.sleep(STARTUP_GRACE_SECONDS)
+    print('POWER_MODE:', power.get_mode())  # fail here, before Wi-Fi, on a typo
     da = get_adapter_by_name(settings.DISPLAY_DEVICE)
     if settings.BOOT_DISPLAY:
         da.display_text('Booting...')
