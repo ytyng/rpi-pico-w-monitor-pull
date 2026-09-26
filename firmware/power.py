@@ -35,10 +35,12 @@ def after_request(wlan):
     _polling_sleep()
 
 
-def on_startup_failure():
+def on_failure():
     """
     Give up this cycle. In tpl5110 mode cut our power so the TPL5110 retries
     on its next period; a plain reset would loop forever with Wi-Fi on.
+    An invalid POWER_MODE raises here and leaves the board at the REPL,
+    which is the point: a reset loop would hide the typo.
     """
     if get_mode() == 'tpl5110':
         _tpl5110_done()

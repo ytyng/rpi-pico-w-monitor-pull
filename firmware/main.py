@@ -75,6 +75,17 @@ def blink_led(count=3):
 
 
 def main():
+    try:
+        _boot()
+    except Exception as e:
+        print(f'{e.__class__.__name__}: {e}')
+        # Anything escaping _boot (display init, Wi-Fi, main_loop) would
+        # otherwise leave the board idle at the REPL, with a wired TPL5110
+        # still supplying power.
+        power.on_failure()
+
+
+def _boot():
     machine.Pin(23, machine.Pin.OUT).high()  # Wake up Wi-fy
     blink_led(1)
     print('Booting... (Ctrl-C within {} s to stop)'.format(
@@ -89,12 +100,10 @@ def main():
         # wlan = network_utils.prepare_wifi(log=da.display_text)
         wlan = network_utils.prepare_wifi()
     except Exception as e:
-        print(f'{e.__class__.__name__}: {e}')
         da.display_text(f'{e.__class__.__name__}: {e}')
         # 10秒がタイムアウトになる場合がある。
         # リセットしたほうが確実
-        power.on_startup_failure()
-        return
+        raise
 
     if settings.BOOT_DISPLAY:
         da.display_text('Wifi ready.\n{}'.format(wlan.ifconfig()[0]))
