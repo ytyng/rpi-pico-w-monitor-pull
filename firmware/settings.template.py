@@ -1,14 +1,15 @@
 """
-Copy this file to settings.py and fill in your Wi-Fi credentials.
+Copy this file to settings.py and edit. Secrets go in secrets.py
+(copy secrets.template.py).
 """
+
+from secrets import WIFI_PASSWORD, REQUEST_HEADER_AUTHORIZATION  # noqa: F401
 
 # 2.4GHz Wi-fi only
 WIFI_SSID = 'YOUR_WIFI_SSID'
-WIFI_PASSWORD = 'YOUR_WIFI_PASSWORD'
 COUNTRY = 'YOUR_COUNTRY_CODE'  # JP, US, etc.
 
 REQUEST_URL = 'https://example.com/api/monitor/'
-REQUEST_HEADER_AUTHORIZATION = 'Token YOUR_TOKEN'
 REQUEST_HEADER_USER_AGENT = 'Raspberry Pi Pico W'
 
 DISPLAY_DEVICE = 'SSD1306'  # or 'EPAPER213'

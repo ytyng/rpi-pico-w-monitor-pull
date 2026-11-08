@@ -13,9 +13,10 @@ the response on an e-paper (Waveshare 2.13 V3) or OLED (SSD1306) display.
 
 ## Git-ignored local files
 
-`firmware/settings.py`, `firmware/png.py`, `firmware/pico_e_paper.py` exist only
-locally. Move them with `mv`, not `git mv`. Never print `settings.py` in full; it
-holds the Wi-Fi password and API token.
+`firmware/settings.py`, `firmware/secrets.py`, `firmware/png.py`,
+`firmware/pico_e_paper.py` exist only locally. Move them with `mv`, not `git mv`.
+Never print `secrets.py`; it holds the Wi-Fi password and API token
+(`secrets.template.py` is its committed reference).
 
 ## settings.py
 
