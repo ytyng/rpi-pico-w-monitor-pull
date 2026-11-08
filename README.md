@@ -17,6 +17,7 @@ e-paper or OLED display.
 
 ```
 cp firmware/settings.template.py firmware/settings.py   # then edit
+cp firmware/secrets.template.py firmware/secrets.py     # Wi-Fi password, API token
 ```
 
 Third-party modules to drop into `firmware/` (git-ignored):
@@ -47,7 +48,7 @@ TPL5110 wiring: TPL5110 `DRV` → Pico `VSYS`, `GND` → `GND`, `DONE` ← Pico 
 
 ```
 uv sync
-uv run tools/deploy.py          # main.py settings.py network_utils.py display_adapter.py power.py
+uv run tools/deploy.py          # main.py settings.py secrets.py network_utils.py display_adapter.py power.py
 uv run tools/deploy.py --libs   # + png.py, pico_e_paper.py (those present)
 ```
 

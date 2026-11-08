@@ -23,6 +23,7 @@ FIRMWARE_DIR = Path(__file__).resolve().parent.parent / 'firmware'
 CORE_FILES = [
     'main.py',
     'settings.py',
+    'secrets.py',
     'network_utils.py',
     'display_adapter.py',
     'power.py',
